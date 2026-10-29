@@ -34,12 +34,16 @@ export enum PacketType {
     PROBE_REQ = 0xd,
     PROBE_RESP = 0xe
 }
+/** PTP operation codes (sent in an OP_REQUEST) */
 export enum OpCode {
-    OK = 0x2001,
-    BUSY = 0x2019,
-
     GetDeviceInfo = 0x1001,
     OpenSession = 0x1002
+}
+
+/** PTP response codes (received in an OP_RESPONSE) */
+export enum ResponseCode {
+    OK = 0x2001,
+    BUSY = 0x2019
 }
 
 export type PacketPTP = PacketOpResponse | PacketInitResponse | PacketInitFail | PacketDataStart | PacketDataEnd
@@ -64,7 +68,8 @@ export type PacketInitResponse = PacketPTPBase & {
 
 export type PacketOpResponse = PacketPTPBase & {
     packetType: PacketType.OP_RESPONSE
-    opcode: OpCode
+    /** Response code (PTP puts the code where a request carries its opcode) */
+    opcode: ResponseCode
     transactionID: number,
     buffer?: Buffer
 }

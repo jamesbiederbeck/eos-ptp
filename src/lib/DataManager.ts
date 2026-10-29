@@ -1,5 +1,5 @@
 import { Socket } from 'net'
-import { createEventRequest, createInit, createPTP, decodeResponsePTP, extractValueData, OpCode, PacketOpResponse, PacketPTP, PacketPTPBase, PacketType } from './ptp'
+import { createEventRequest, createInit, createPTP, decodeResponsePTP, extractValueData, OpCode, PacketOpResponse, PacketPTP, PacketPTPBase, PacketType, ResponseCode } from './ptp'
 import ISO from './iso'
 import Queue, { QueueWorker } from 'queue'
 import { EventEmitter } from 'events'
@@ -388,7 +388,7 @@ TODO:
                     setTimeout(async () => {
                         this.#PTPcallbackMap[transactionID] = (data: T) => {
 
-                            let shouldRetry = data.packetType == PacketType.OP_RESPONSE && data.opcode == OpCode.BUSY
+                            let shouldRetry = data.packetType == PacketType.OP_RESPONSE && data.opcode == ResponseCode.BUSY
 
                             if (shouldRetry) {
                                 retryCount++
