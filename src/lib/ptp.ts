@@ -110,30 +110,31 @@ export function createInit(name: string, guid?: string | Buffer) {
     const SIZE_VERSION = 4
 
     name = name || getHostname() || "Remote"
-    guid = (guid || machineIdSync()).slice(0, SIZE_GUID)
-    if (typeof guid === 'string') guid.padStart(SIZE_GUID, '0')
 
     /**
-     * Each hostname character is followed by a NUL character
-     * After the last character+NUL, there are two more NUL characters
+     * machineIdSync() gives 32 hex characters, which is the GUID as text;
+     * decode it so that all 16 GUID bytes are used
      */
-    const SIZE_HOSTNAME = 2 * name.length + 2
-
-    let result = Buffer.allocUnsafe(SIZE_GUID + SIZE_HOSTNAME + SIZE_VERSION)
-    if (typeof guid === 'string') {
-        result.write(guid)
+    let guidBytes: Buffer
+    if (guid === undefined || typeof guid === 'string') {
+        let text = guid || machineIdSync()
+        guidBytes = /^[0-9a-f]{32}$/i.test(text) ? Buffer.from(text, 'hex') : Buffer.from(text, 'latin1')
     } else {
-        (<Buffer>guid).copy(result)
+        guidBytes = guid
     }
+    guidBytes = Buffer.concat([guidBytes, Buffer.alloc(SIZE_GUID)]).slice(0, SIZE_GUID)
 
-    for (let i = 0; i < name.length; i++) {
-        result.write(name[i], SIZE_GUID + i * 2)
-        result.writeUInt8(0, SIZE_GUID + i * 2 + 1)
-    }
+    /**
+     * The hostname is UTF-16LE, NUL terminated
+     */
+    const hostname = Buffer.from(name + '\0', 'utf16le')
 
-    result.writeUint16LE(0, SIZE_GUID + name.length * 2)
+    let result = Buffer.alloc(SIZE_GUID + hostname.length + SIZE_VERSION)
+    guidBytes.copy(result)
+    hostname.copy(result, SIZE_GUID)
 
-    result.set([0x00, 0x00, 0x01, 0x00], SIZE_GUID + SIZE_HOSTNAME)
+    // PTP/IP protocol version 1.0 (major in the high 16 bits, little endian)
+    result.writeUInt32LE(0x00010000, SIZE_GUID + hostname.length)
 
     return createPTP(PacketType.INIT_CMD_REQ, result)
 }
