@@ -26,8 +26,13 @@ export enum PacketType {
     INIT_FAIL = 0x5,
     OP_REQUEST = 0x6,
     OP_RESPONSE = 0x7,
+    EVENT = 0x8,
     DATA_START = 0x9,
-    DATA_END = 0xc
+    DATA = 0xa,
+    CANCEL = 0xb,
+    DATA_END = 0xc,
+    PROBE_REQ = 0xd,
+    PROBE_RESP = 0xe
 }
 export enum OpCode {
     OK = 0x2001,
