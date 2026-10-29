@@ -34,6 +34,7 @@ export enum PacketType {
     PROBE_REQ = 0xd,
     PROBE_RESP = 0xe
 }
+
 /** PTP operation codes (sent in an OP_REQUEST) */
 export enum OpCode {
     GetDeviceInfo = 0x1001,
@@ -177,6 +178,12 @@ function _extractValueData(data: Buffer) {
     let parts: { values: Value[], enums: Value[] } = { values: [], enums: [] }
     while (data.length > 0) {
         let length = data.readUint16LE(0);
+
+        // A zero (or too short) record would never advance; drop the remainder
+        if (length < 8 || length > data.length) {
+            console.warn("Malformed property record, dropping", data.length, "bytes")
+            break
+        }
 
         if (!(length == 0x8 && data.equals(nullBuffer))) {
 
